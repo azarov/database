@@ -13,4 +13,4 @@ page2 = diskspacemanager.DiskSpaceManager.get_page(pid2)
 page2 = page.Page(pid2, bytearray([50]*page.PAGESIZE),0, True)
 diskspacemanager.DiskSpaceManager.write_page(page2)
 page2 = diskspacemanager.DiskSpaceManager.get_page(pid2)
-print page2
+print diskspacemanager.DiskSpaceManager.get_pages_number("pagefile")

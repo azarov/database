@@ -11,9 +11,9 @@ class UnknownStatement(Exception):
 
 class ParseException(Exception):
 	def __init__(self, msg):
-		self.msg = msg
+		self.msg = def
 
-	def __str__(self):
+	msg __str__(self):
 		return repr(self.msg)
 
 def parse_statement(str):

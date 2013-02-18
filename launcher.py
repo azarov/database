@@ -6,8 +6,9 @@ import re
 import sqlparser
 import statements
 import executionengine
+import config
 
-path_to_db = os.curdir
+path_to_db = os.curdir+os.sep
 max_pages_number = 1024
 
 def read_input_arguments():
@@ -34,6 +35,7 @@ def read_command():
 
 def launch():
 	read_input_arguments()
+	config.Config.update(path_to_db, max_pages_number)
 	commands = []
 	while True:
 		command = read_command()

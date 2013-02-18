@@ -9,16 +9,13 @@ class _DiskSpaceManager(object):
 		self.file = None
 
 	def get_page(self, pageid):
-		
-		if self.currentfilename != pageid.filename:
-			if self.file != None and not self.file.closed:
-				self.file.close()
-			self.file = open(pageid.filename, "rb+")
-			self.currentfilename = pageid.filename
 
-		if os.fstat(self.file.fileno()).st_size < page.PAGESIZE*(pageid.pageno+1):
-			return None
+		self.__update(pageid.filename, "wb+")		
 
+		if os.stat(pageid.filename).st_size < page.PAGESIZE*(pageid.pageno+1):
+			self.file.seek(page.PAGESIZE*(pageid.pageno+1)-1)
+			self.file.write("\0")
+			self.file.flush()
 
 		self.file.seek(page.PAGESIZE*pageid.pageno)
 		p = self.file.read(page.PAGESIZE)
@@ -26,19 +23,28 @@ class _DiskSpaceManager(object):
 		return page.Page(pageid, p)
 
 	def write_page(self, p):
-
 		if not p.is_dirty():
 			return
 
 		pageid = p.id
-		if self.currentfilename != pageid.filename:
-			if self.file != None and not self.file.closed:
-				self.file.close()
-			self.file = open(pageid.filename, "wb+")
-			self.currentfilename = pageid.filename
-
+		self.__update(pageid.filename, "wb+")
 		self.file.seek(page.PAGESIZE*p.id.pageno)
 		self.file.write(p.data)
 		p.reset_dirty()
+
+	def get_pages_number(self, filename):
+		if os.path.isfile(filename) == False:
+			p = self.get_page(page.PageId(filename, 0))
+			p.unpin()
+			return 1
+		self.__update(filename, "rb+")
+		return os.stat(filename).st_size/page.PAGESIZE
+
+	def __update(self, filename, mode):
+		if self.currentfilename != filename:
+			if self.file != None and not self.file.closed:
+				self.file.close()
+			self.file = open(filename, mode)
+			self.currentfilename = filename
 
 DiskSpaceManager = _DiskSpaceManager()
