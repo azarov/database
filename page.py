@@ -10,7 +10,10 @@ class PageId(object):
 		self.pageno = pageno
 
 	def __hash__(self):
-		return hash(self.filename) ^ self.pageno
+		return hash((self.filename, self.pageno))
+
+	def __eq__(self, other):
+		return (self.filename, self.pageno) == (other.filename, other.pageno)
 
 class Page(object):
 	def __init__(self, id, data, pin_count = 0, dirty = False):

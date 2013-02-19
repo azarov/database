@@ -25,7 +25,7 @@ class PagesDirectory(object):
 				pageno += 1
 			p.unpin()
 
-		self.page_freed(self, pageno)
+		self.page_freed(pageno)
 		return bm.BufferManager.find_page(page.PageId(self.filename, pageno))
 
 

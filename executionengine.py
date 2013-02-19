@@ -5,6 +5,8 @@ import flatfile
 import tablemetadata as tmd
 import metadataprovider as mdp
 import PagesDirectory as pd
+import buffermanager as bm
+import heapfile as hf
 import os
 
 def execute(statement):
@@ -29,10 +31,10 @@ def execute_create(statement):
 	pd.create_pages_directory(statement.tablename)
 
 def execute_insert(statement):
-	f = flatfile.FlatFile()
-	f.open(statement.tablename)
-	f.insert(flatfile.Record(statement.values[0], statement.values[1:]))
-	f.close()
+	heap = hf.HeapFile()
+	tablemetadata = mdp.MetaDataProvider.get_metadata(statement.tablename)
+	values = dict(map(None, [x.name for x in tablemetadata.attributes], statement.values))
+	heap.insert(tablemetadata, values)
 
 def execute_select(statement):
 	f = flatfile.FlatFile()
@@ -43,6 +45,7 @@ def execute_select(statement):
 	f.close()
 
 def execute_drop(statement):
+	bm.BufferManager.force()
 	if os.path.isfile(statement.tablename):
 		os.remove(statement.tablename)
 

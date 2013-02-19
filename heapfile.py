@@ -19,7 +19,7 @@ class HeapFile(object):
 
 		records_table = data[-records_per_page:]
 		try:
-			recordno = records_per_page.index(0)
+			recordno = records_table.index(b'\x00')
 		except ValueError, e:
 			#this shouldn't happen
 			#should be logged
@@ -60,8 +60,9 @@ class HeapFile(object):
 		elif attr.typename == tmd.Types.DOUBLE:
 			return float(val)
 		elif attr.typename == tmd.Types.VARCHAR:
-			if len(val) > tmd.VARCHAR_MAX_SIZE:
+			if len(val) > tmd.VARCHAR_MAX_SIZE or len(val) > attr.size:
 				raise Exception("String is too long. Size: "+len(val))
+			return val
 		else:
 			raise UnkownTypeException(attr.typename)
 
@@ -89,8 +90,44 @@ class HeapFile(object):
 		p.unpin()
 		return record
 
-	def update(self, tablemetadata, values):
-		pass
+	def update(self, tablemetadata, pageno, recordno, values):
+		records_per_page = tablemetadata.records_per_page
+		p = bm.BufferManager.find_page(page.Page(tablemetadata.name, pageno))
+
+		records_table = p.data[-records_per_page:]
+		if records_table[recordno] == 0:
+			raise Exception("Can't update record with id {0}. Record doesn't exist. You should insert it before".format(recordno))
+
+		record_begin = tablemetadata.record_size*recordno
+		record_end = record_begin+tablemetadata.record_size
+
+		record = str(p.data[record_begin:record_end])
+
+		old_values = struct.unpack(tablemetadata.format, record)
+		record = self._get_updated_record(tablemetadata, values, old_values)
+
+		p.data = p.data[:record_begin]+record+p.data[record_end:-records_per_page]+str(records_table)
+
+		p.set_dirty()
+		p.unpin()
+
+	def _get_updated_record(self, tablemetadata, values, old_values):
+		attributes = []
+		if len(old_values) != len(tablemetadata.attributes):
+			raise Exception("Can't update record. Record format corrupted.")
+
+		for attr in zip(tablemetadata.attributes, old_values):
+			if attr[0].name in values:
+				val = self._parse_value(attr[0], values[attr[0].name])
+				attributes.append(val)
+				del values[attr[0].name]
+			else:
+				attributes.append(attr[1])
+
+		if len(values) != 0:
+			raise Exception("Can't make record. Unknown columns: "+values.keys)
+
+		return struct.pack(tablemetadata.format, *attributes)
 
 class UnkownTypeException(Exception):
 	def __init__(self, msg):

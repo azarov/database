@@ -33,11 +33,8 @@ class _DiskSpaceManager(object):
 		p.reset_dirty()
 
 	def get_pages_number(self, filename):
-		if os.path.isfile(filename) == False:
-			p = self.get_page(page.PageId(filename, 0))
-			p.unpin()
-			return 1
-		self.__update(filename, "rb+")
+		p = self.get_page(page.PageId(filename, 0))
+		p.unpin()
 		return os.stat(filename).st_size/page.PAGESIZE
 
 	def __update(self, filename, mode):

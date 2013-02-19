@@ -16,6 +16,7 @@ class TableMetaData(object):
 		self.attributes = attributes
 		self.format = self._make_format_string(self.attributes)
 		self.records_per_page = int(page.PAGESIZE/(calcsize(self.format)+1))
+		self.record_size = calcsize(self.format)
 
 	def _make_format_string(self, attributes):
 		format = []
