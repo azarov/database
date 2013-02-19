@@ -1,12 +1,38 @@
 #!/usr/bin/python
 
+from struct import *
+import page
+
 class Attribute(object):
-	def __init__(self, name, type, size):
-		pass
-		
+	def __init__(self, name, typename, size, default_value):
+		self.name = name
+		self.typename = typename
+		self.size = size
+		self.default_value = default_value
 
 class TableMetaData(object):
-	def __init__(self, name, record_size, records_per_page):
+	def __init__(self, name, attributes):
 		self.name = name
-		self.record_size = record_size
-		self.records_per_page = records_per_page
+		self.attributes = attributes
+		self.format = self._make_format_string(self.attributes)
+		self.records_per_page = int(page.PAGESIZE/(calcsize(self.format)+1))
+
+	def _make_format_string(self, attributes):
+		format = []
+		for attr in attributes:
+			if attr.typename == Types.INT:
+				format.append("i")
+			elif attr.typename == Types.DOUBLE:
+				format.append("q")
+			elif attr.typename == Types.VARCHAR:
+				format.append(str(VARCHAR_MAX_SIZE)+"s")
+			else:
+				raise Exception("Unknown type: "+attr.typename)
+		return "".join(format)
+
+
+def enum(**enums):
+	return type('Enum', (), enums)
+
+Types = enum(INT="int", DOUBLE="double", VARCHAR="varchar")
+VARCHAR_MAX_SIZE = 128

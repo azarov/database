@@ -4,12 +4,12 @@ import config
 import tablemetadata
 import pickle
 
-class MetaDataProvider(object):
+class _MetaDataProvider(object):
 	def __init__(self):
 		pass
 
 	def get_metadata(self, tablename):
-		metadatafilepath = config.Config.path_to_db+tablename
+		metadatafilepath = tablename+"_metadata"
 		metadata = None
 		with open(metadatafilepath, "rb") as f:
 			metadata = pickle.load(f)
@@ -17,7 +17,11 @@ class MetaDataProvider(object):
 		return metadata
 
 	def save_metadata(self, metadata):
-		metadatafilepath = config.Config.path_to_db+metadata.name
+		metadatafilepath = metadata.name+"_metadata"
 		with open(metadatafilepath, "wb") as f:
 			pickle.dump(metadata, f)
 
+MetaDataProvider = _MetaDataProvider()
+
+def get_metadata_name(tablename):
+	return tablename+"_metadata"

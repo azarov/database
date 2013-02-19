@@ -54,3 +54,5 @@ def create_pages_directory(filename):
 	first_page.set_dirty()
 	first_page.unpin()
 	
+def get_page_directory_name(tablename):
+	return tablename+"_directory"

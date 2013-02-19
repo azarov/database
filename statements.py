@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
 class CreateStatement(object):
-	def __init__(self, tablename, fields):
+	def __init__(self, tablename, attributes):
 		self.tablename = tablename
-		self.fields = fields
+		self.attributes = attributes
 
 	def __repr__(self):
-		return "CreateStatement: [tablename: {0}, fields: {1}]".format(self.tablename, self.fields)
+		return "CreateStatement: [tablename: {0}, attributes: {1}]".format(self.tablename, self.attributes)
 
 class InsertStatement(object):
 	def __init__(self, tablename, values):
@@ -22,3 +22,10 @@ class SelectStatement(object):
 
 	def __repr__(self):
 		return "SelectStatement: [tablename: {0}]".format(self.tablename)
+
+class DropStatement(object):
+	def __init__(self, tablename):
+		self.tablename = tablename
+
+	def __repr__(self):
+		return "DropStatement: [tablename: {0}]".format(self.tablename)	
