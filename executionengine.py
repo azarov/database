@@ -7,6 +7,9 @@ import metadataprovider as mdp
 import PagesDirectory as pd
 import buffermanager as bm
 import heapfile as hf
+import struct
+import csvprinter
+import sys
 import os
 
 def execute(statement):
@@ -39,12 +42,18 @@ def execute_insert(statement):
 	heap.insert(tablemetadata, values)
 
 def execute_select(statement):
-	f = flatfile.FlatFile()
-	f.open(statement.tablename)
-	records = f.get_all_records()
-	for rec in records:
-		print rec
-	f.close()
+	heap = hf.HeapFile()
+	tablemetadata = mdp.MetaDataProvider.get_metadata(statement.tablename)
+
+	records = [struct.unpack(tablemetadata.format, x) for x in heap.get_all_records(tablemetadata)]
+	printer = csvprinter.CsvPrinter(sys.stdout, tablemetadata)
+	printer.print_records(records)
+	#f = flatfile.FlatFile()
+	#f.open(statement.tablename)
+	#records = f.get_all_records()
+	#for rec in records:
+		#print rec
+	#f.close()
 
 def execute_drop(statement):
 	bm.BufferManager.force()
