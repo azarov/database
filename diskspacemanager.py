@@ -10,16 +10,16 @@ class _DiskSpaceManager(object):
 
 	def get_page(self, pageid):
 
-		self.__update(pageid.filename, "wb+")		
+		self.file = open(pageid.filename, "rb+")
 
 		if os.stat(pageid.filename).st_size < page.PAGESIZE*(pageid.pageno+1):
 			self.file.seek(page.PAGESIZE*(pageid.pageno+1)-1)
 			self.file.write("\0")
-			self.file.flush()
 
 		self.file.seek(page.PAGESIZE*pageid.pageno)
 		p = self.file.read(page.PAGESIZE)
 
+		self.file.close()
 		return page.Page(pageid, p)
 
 	def write_page(self, p):
@@ -27,9 +27,10 @@ class _DiskSpaceManager(object):
 			return
 
 		pageid = p.id
-		self.__update(pageid.filename, "wb+")
+		self.file = open(pageid.filename, "rb+")
 		self.file.seek(page.PAGESIZE*p.id.pageno)
 		self.file.write(p.data)
+		self.file.close()
 		p.reset_dirty()
 
 	def get_pages_number(self, filename):

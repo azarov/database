@@ -25,12 +25,12 @@ class _BufferManager(object):
 	def replace(self, page):
 		pages_for_replacement = sorted(filter(lambda v: v.is_unpinned(), self.pages.values()), key=lambda x: x.time, reverse = True)
 		if len(pages_for_replacement) == 0:
-			return
+			raise Exception("Buffer manager can't give page cause of all buffer is filled and all pages are using")
 
 		page_for_replacement = pages_for_replacement[0]
 		dsm.DiskSpaceManager.write_page(page_for_replacement)
-		del self.pages[pages_for_replacement[0].pageid]
-		self.pages[page.pageid] = page
+		del self.pages[pages_for_replacement[0].id]
+		self.pages[page.id] = page
 
 	def force(self):
 		for page in self.pages.values():

@@ -15,6 +15,9 @@ class PageId(object):
 	def __eq__(self, other):
 		return (self.filename, self.pageno) == (other.filename, other.pageno)
 
+	def __repr__(self):
+		return "[filename : {0}, pageno : {1}]".format(self.filename, self.pageno)
+
 class Page(object):
 	def __init__(self, id, data, pin_count = 0, dirty = False):
 		self.id = id
@@ -42,4 +45,4 @@ class Page(object):
 		return self.pin_count == 0
 
 	def __repr__(self):
-		print str(self.data).encode("hex")
+		return str(self.data).encode("hex")

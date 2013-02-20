@@ -27,6 +27,8 @@ def execute_create(statement):
 	tablemetadata = tmd.TableMetaData(statement.tablename, statement.attributes)
 	f = open(statement.tablename, "wb")
 	f.close()
+	f = open(pd.get_page_directory_name(statement.tablename), "wb")
+	f.close()
 	mdp.MetaDataProvider.save_metadata(tablemetadata)
 	pd.create_pages_directory(statement.tablename)
 

@@ -11,7 +11,7 @@ class PagesDirectory(object):
 		self.directoryfilename = filename+"_directory"
 
 	def get_page_for_insert(self):
-		pages_number = dsm.DiskSpaceManager.get_pages_number(self.filename)
+		#pages_number = dsm.DiskSpaceManager.get_pages_number(self.filename)
 		dir_pages_number = dsm.DiskSpaceManager.get_pages_number(self.directoryfilename)
 		pageno = 0
 
@@ -19,7 +19,7 @@ class PagesDirectory(object):
 			p = bm.BufferManager.find_page(page.PageId(self.directoryfilename, dir_pageno))
 			data = bytearray(p.data)
 			for x in data:
-				if x == 0 and pageno < pages_number:
+				if x == 0:
 					p.unpin()
 					return bm.BufferManager.find_page(page.PageId(self.filename, pageno))
 				pageno += 1

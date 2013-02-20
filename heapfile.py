@@ -3,6 +3,7 @@
 import PagesDirectory as pd
 import struct
 import tablemetadata as tmd
+import diskspacemanager as dsm
 import buffermanager as bm
 import page
 
@@ -60,9 +61,13 @@ class HeapFile(object):
 		elif attr.typename == tmd.Types.DOUBLE:
 			return float(val)
 		elif attr.typename == tmd.Types.VARCHAR:
-			if len(val) > tmd.VARCHAR_MAX_SIZE or len(val) > attr.size:
-				raise Exception("String is too long. Size: "+len(val))
-			return val
+			if val.startswith("\"") and val.endswith("\""):
+				val = val[1:-1]
+				if len(val) > tmd.VARCHAR_MAX_SIZE or len(val) > attr.size:
+					raise Exception("String is too long. Size: "+len(val))
+				return val
+			else:
+				raise Exception("Attribute {0} should have string type.".format(attr.name))
 		else:
 			raise UnkownTypeException(attr.typename)
 
@@ -128,6 +133,25 @@ class HeapFile(object):
 			raise Exception("Can't make record. Unknown columns: "+values.keys)
 
 		return struct.pack(tablemetadata.format, *attributes)
+
+	def get_all_records(self, tablemetadata):
+		pages_number = dsm.DiskSpaceManager.get_pages_number(tablemetadata.name)
+		records_per_page = tablemetadata.records_per_page
+
+		for pageno in xrange(0,pages_number):
+			p = bm.BufferManager.find_page(page.PageId(tablemetadata.name, pageno))
+			records_table = bytearray(p.data[-records_per_page:])
+			recordno = 0
+			for i in records_table:
+				if i == 1:
+					record_begin = tablemetadata.record_size*recordno
+					record_end = record_begin+tablemetadata.record_size
+					yield p.data[record_begin:record_end]
+				recordno += 1
+			p.unpin()
+
+		return
+
 
 class UnkownTypeException(Exception):
 	def __init__(self, msg):
