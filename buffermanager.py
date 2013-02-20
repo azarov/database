@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import diskspacemanager as dsm
-import launcher
+import config
 
 class _BufferManager(object):
 	def __init__(self, max_size):
@@ -25,7 +25,7 @@ class _BufferManager(object):
 	def replace(self, page):
 		pages_for_replacement = sorted(filter(lambda v: v.is_unpinned(), self.pages.values()), key=lambda x: x.time, reverse = True)
 		if len(pages_for_replacement) == 0:
-			raise Exception("Buffer manager can't give page cause of all buffer is filled and all pages are using")
+			raise Exception("Buffer manager can't give page cause of buffer is filled and all pages are using")
 
 		page_for_replacement = pages_for_replacement[0]
 		dsm.DiskSpaceManager.write_page(page_for_replacement)
@@ -37,4 +37,4 @@ class _BufferManager(object):
 			dsm.DiskSpaceManager.write_page(page)
 
 
-BufferManager = _BufferManager(launcher.max_pages_number)
+BufferManager = _BufferManager(config.Config.max_pages_number)
