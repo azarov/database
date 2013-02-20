@@ -53,11 +53,30 @@ def parse_insert(str):
 	return statements.InsertStatement(m.group(1), values)
 
 def parse_select(str):
-	m = re.match(r"select (.+) from (\w+)", str, re.IGNORECASE)
+	m = re.match(r"select (.+) from (\w+)( where (.+))?", str, re.IGNORECASE)
 	if m == None:
 		raise ParseException("Can't parse: "+str)
-	return statements.SelectStatement(m.group(2))
+	if m.group(4) == None:
+		return statements.SelectStatement(m.group(2))
+	else:
+		return statements.SelectStatement(m.group(2), parse_where(m.group(4)))
 
 def parse_drop(str):
 	m = re.match(r"drop table (\w+)", str, re.IGNORECASE)
 	return statements.DropStatement(m.group(1))
+
+def parse_where(str):
+	m = re.match(r"(\w+)(\s*)(\W{1,2})(\s*)(.+)", str, re.IGNORECASE)
+	if m == None:
+		raise ParseException("Can't parse: "+str)
+	
+	colname = m.group(1)
+	operation = m.group(3)
+	value = m.group(5)
+	
+	if colname == None or operation == None or value == None:
+		raise ParseException("Can't parse: "+str)
+	
+	value.strip("'""")
+	
+	return statements.WhereStatement(colname, operation, value)
