@@ -71,12 +71,27 @@ def parse_where(str):
 		raise ParseException("Can't parse: "+str)
 	
 	colname = m.group(1)
-	operation = m.group(3)
+	operation = m.group(3).strip()
 	value = m.group(5)
 	
 	if colname == None or operation == None or value == None:
 		raise ParseException("Can't parse: "+str)
 	
-	value.strip("'""")
+	if operation == "=":
+		operation = statements.WhereOps.EQ
+	elif operation == "!=":
+		operation = statements.WhereOps.NEQ
+	elif operation == "<":
+		operation = statements.WhereOps.LT
+	elif operation == ">":
+		operation = statements.WhereOps.GT
+	elif operation == "<=":
+		operation = statements.WhereOps.LEQ
+	elif operation == ">=":
+		operation = statements.WhereOps.GEQ
+	else:
+		raise ParseException("Can't parse: " + str)
+	
+	value = value.strip('"').strip("'")
 	
 	return statements.WhereStatement(colname, operation, value)
