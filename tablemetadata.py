@@ -27,7 +27,7 @@ class TableMetaData(object):
 	def __init__(self, name, attributes, indices = []):
 		self.name = name
 		self.attributes = attributes
-		self.format = _make_format_string(self.attributes)
+		self.format = make_format_string(self.attributes)
 		self.records_per_page = int(page.PAGESIZE/(calcsize(self.format)+1))
 		self.record_size = calcsize(self.format)
 		self.indices = indices

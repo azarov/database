@@ -9,6 +9,7 @@ config.Config.max_pages_number = 5
 import sqlparser
 import executionengine as ee
 import buffermanager as bm
+import random
 
 def test():
 	str = 'drop table users'
@@ -20,26 +21,26 @@ def test():
 	stmt = sqlparser.parse_statement(str)
 	ee.execute(stmt)
 
-	for x in xrange(0,20):
-		str = 'Insert into users values(1, "Vasya")'
+	for x in xrange(0,2000):
+		str = 'Insert into users values({0}, "Vasya")'.format(random.randint(1, 10000000))
 		stmt = sqlparser.parse_statement(str)
 		ee.execute(stmt)
 
-		str = 'Insert into users values(2, "Vladimir petrovich")'
-		stmt = sqlparser.parse_statement(str)
-		ee.execute(stmt)
+		# str = 'Insert into users values(2, "Vladimir petrovich")'
+		# stmt = sqlparser.parse_statement(str)
+		# ee.execute(stmt)
 
-		str = 'Insert into users values(3, "Peter")'
-		stmt = sqlparser.parse_statement(str)
-		ee.execute(stmt)
+		# str = 'Insert into users values(3, "Peter")'
+		# stmt = sqlparser.parse_statement(str)
+		# ee.execute(stmt)
 
-		str = 'Insert into users values(4, "Captain America")'
-		stmt = sqlparser.parse_statement(str)
-		ee.execute(stmt)
+		# str = 'Insert into users values(4, "Captain America")'
+		# stmt = sqlparser.parse_statement(str)
+		# ee.execute(stmt)
 
-		str = 'Insert into users values(5, "John Doe")'
-		stmt = sqlparser.parse_statement(str)
-		ee.execute(stmt)
+		# str = 'Insert into users values(5, "John Doe")'
+		# stmt = sqlparser.parse_statement(str)
+		# ee.execute(stmt)
 
 	bm.BufferManager.force()
 

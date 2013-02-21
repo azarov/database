@@ -32,7 +32,6 @@ class DropStatement(object):
 		self.tablename = tablename
 
 	def __repr__(self):
-<<<<<<< HEAD
 		return "DropStatement: [tablename: {0}]".format(self.tablename)	
 
 class CreateIndexStatement(object):
@@ -51,7 +50,6 @@ class IndexColumn(object):
 	def __init__(self, column_name, ascending):
 		self.column_name = column_name
 		self.ascending = ascending
-=======
 		return "DropStatement: [tablename: {0}]".format(self.tablename)
 
 class WhereStatement(object):
@@ -63,7 +61,7 @@ class WhereStatement(object):
 	def __repr__(self):
 		return "WhereStatement: [colname: {0}, operation: {1}, value: {2}]".format(self.colname, self.operation, self.value)
 	
-	def checkCondition(val):
+	def checkCondition(self, val):
 		if self.operation == WhereOps.EQ:
 			return self.value == val
 		elif self.operation == WhereOps.NEQ:
@@ -84,4 +82,3 @@ def enum(**enums):
 	return type('Enum', (), enums)
 
 WhereOps = enum(EQ="=", NEQ="!=", LT="<", GT=">", LEQ="<=", GEQ=">=")
->>>>>>> 828569046d90b5cd4ee9d1c4d1de93448777bf17
