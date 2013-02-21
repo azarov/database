@@ -51,7 +51,7 @@ def execute_select(statement):
 	heap = hf.HeapFile()
 	tablemetadata = mdp.MetaDataProvider.get_metadata(statement.tablename)
 
-	records = [x.values for x in heap.get_all_records(tablemetadata)]
+	records = [x.values for x in heap.get_all_records(tablemetadata, statement.whereStmt)]
 	printer = csvprinter.CsvPrinter(sys.stdout, tablemetadata)
 	printer.print_records(records)
 

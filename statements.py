@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sqlparser
+
 class CreateStatement(object):
 	def __init__(self, tablename, attributes):
 		self.tablename = tablename
@@ -62,21 +64,29 @@ class WhereStatement(object):
 		return "WhereStatement: [colname: {0}, operation: {1}, value: {2}]".format(self.colname, self.operation, self.value)
 	
 	def checkCondition(self, val):
-		if self.operation == WhereOps.EQ:
-			return self.value == val
-		elif self.operation == WhereOps.NEQ:
-			return self.value != val
-		elif self.operation == WhereOps.LT:
-			return self.value < val
-		elif self.operation == WhereOps.GT:
-			return self.value > val
-		elif self.operation == WhereOps.LEQ:
-			return self.value <= val
-		elif self.operation == WhereOps.GEQ:
-			return self.value >= val
+		if isinstance(val, str):
+			val = str(val).strip("\x00")
+		elif isinstance(val, int):
+			self.value = int(self.value)
+		elif isinstance(val, float):
+			self.value = float(self.value)
 		else:
-			# TODO: error checking
-			return False
+			raise sqlparser.ParseException("Unsupported column type: " + type(val))
+			
+		if self.operation == WhereOps.EQ:
+			return val == self.value
+		elif self.operation == WhereOps.NEQ:
+			return val != self.value
+		elif self.operation == WhereOps.LT:
+			return val < self.value
+		elif self.operation == WhereOps.GT:
+			return val > self.value
+		elif self.operation == WhereOps.LEQ:
+			return val <= self.value
+		elif self.operation == WhereOps.GEQ:
+			return val >= self.value
+		else:
+			raise sqlparser.ParseException("Unsupported operation: " + self.operation)
 
 def enum(**enums):
 	return type('Enum', (), enums)

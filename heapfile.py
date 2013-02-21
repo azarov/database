@@ -6,6 +6,7 @@ import tablemetadata as tmd
 import diskspacemanager as dsm
 import buffermanager as bm
 import page
+import sqlparser
 
 class Record(object):
 	def __init__(self, pageno, rid, values):
@@ -155,12 +156,34 @@ class HeapFile(object):
 					record_begin = tablemetadata.record_size*recordno
 					record_end = record_begin+tablemetadata.record_size
 					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
-					yield Record(pageno, recordno, record)
+
+					if wherestatement != None:
+						index = self._find_col_index(tablemetadata, wherestatement.colname)
+						if index == -1:
+							raise sqlparser.ParseException("Incorrect column name ("+wherestatement.colname+") in where clause.")
+						if wherestatement.checkCondition(record[index]):
+							yield Record(pageno, recordno, record)
+					else:
+						yield Record(pageno, recordno, record)
 					
 				recordno += 1
 			p.unpin()
 
 		return
+
+	def _find_col_index(self, tablemetadata, colname):
+		index = 0
+		found = False
+		for col in tablemetadata.attributes:
+			if col.name == colname:
+				found = True
+				break
+			index += 1
+
+		if found:
+			return index
+		else:
+			return -1
 
 
 class UnkownTypeException(Exception):
