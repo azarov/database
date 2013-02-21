@@ -12,7 +12,6 @@ import struct
 _INIT_DEPTH = 5
 _INTS_PER_PAGE = page.PAGESIZE/4
 
-
 def get_format_for_ints_array():
 	return str(_INTS_PER_PAGE)+"i"
 
@@ -40,7 +39,7 @@ class HashIndexManager(object):
 		utils.create_empty_file(self.index_directory_filename)
 
 		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, 0))
-		data = array("I", [0]*_INTS_PER_PAGE)
+		data = array("i", [0]*_INTS_PER_PAGE)
 		data[0] = _INIT_DEPTH
 		p.data = data.tostring()
 
@@ -62,7 +61,7 @@ class HashIndexManager(object):
 	def _get_global_depth(self):
 		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, 0))
 
-		data = array("I")
+		data = array("i")
 		data.fromstring(p.data)
 		depth = data[0]
 		p.unpin()
@@ -78,8 +77,10 @@ class HashIndexManager(object):
 	def _init_buckets_numbers(self):
 		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, 0))
 
-		data = array("I")
+		data = array("i")
 		data.fromstring(p.data)
+		p.unpin()
+		
 		records_number = 1 << int(data[0])
 
 		records_to_go = 0
@@ -92,7 +93,7 @@ class HashIndexManager(object):
 			else:
 				if p.id.pageno != 0:
 					p.data[0] = _INTS_PER_PAGE-1
-					p.data = array("I", p.data).tostring()
+					p.data = array("i", p.data).tostring()
 					p.set_dirty()
 					p.unpin()
 			
@@ -104,7 +105,7 @@ class HashIndexManager(object):
 
 		if p.id.pageno != 0:
 			p.data[0] = _INTS_PER_PAGE-1-records_to_go
-			p.data = array("I", p.data).tostring()
+			p.data = array("i", p.data).tostring()
 			p.set_dirty()
 			p.unpin()
 
@@ -119,7 +120,7 @@ class HashIndexManager(object):
 		if isinstance(data, array):
 			return (data[-1], data[-2])
 		else:
-			d = array("I")
+			d = array("i")
 			d.fromstring(data)
 			return (d[-1], d[-2])
 
@@ -128,7 +129,7 @@ class HashIndexManager(object):
 			data[-1],data[-2] = info[0],info[1]
 			return data.tostring()
 		else:
-			d = array("I")
+			d = array("i")
 			d.fromstring(data)
 			d[-1],d[-2]=info[0],info[1]
 			return d.tostring()
@@ -161,6 +162,7 @@ class HashIndexManager(object):
 
 		if global_depth == local_depth:
 			self._double_buckets_count()
+			# raise Exception("")
 
 		second_bucket_id = bucket_id | (1 << local_depth)
 
@@ -183,11 +185,12 @@ class HashIndexManager(object):
 		second_bucket.set_dirty()
 		second_bucket.unpin()
 
-		ptr_page = second_bucket_id / _INTS_PER_PAGE + 1
+		ptr_page = second_bucket_id / (_INTS_PER_PAGE-1) + 1
 		dir_page = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, ptr_page))
-		data = array("I")
+		data = array("i")
 		data.fromstring(dir_page.data)
-		data[second_bucket_id % _INTS_PER_PAGE] = second_bucket_id
+		data[second_bucket_id % (_INTS_PER_PAGE-1) + 1] = second_bucket_id
+		dir_page.data = data.tostring()
 		dir_page.set_dirty()
 		dir_page.unpin()
 
@@ -196,8 +199,64 @@ class HashIndexManager(object):
 
 
 	def _double_buckets_count(self):
-		raise Exception("Not implemented yet")
+		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, 0))
+		data = array("i")
+		data.fromstring(p.data)
+		global_depth = data[0]
+		data[0] += 1
+		p.data = data.tostring()
+		p.set_dirty()
+		p.unpin()
 
+		ptrs = 1 << global_depth
+		records_to_go = 0
+		offset = 0
+		pageno = 0
+
+		for curr_hash in xrange(0, ptrs):
+			if records_to_go > 0:
+				records_to_go -= 1
+				offset += 1
+			else:
+				if pageno != 0:
+					p.data = array("i", data).tostring()
+					p.set_dirty()
+					p.unpin()
+			
+				pageno += 1
+				p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, pageno))
+
+				data = array("i")
+				data.fromstring(p.data)
+
+				records_to_go = data[0]-1
+				offset = 1
+
+
+			dir_page_number = (ptrs+curr_hash)/(_INTS_PER_PAGE-1)+1
+			dir_page_offset = (ptrs+curr_hash)%(_INTS_PER_PAGE-1)+1
+			if dir_page_number == pageno:
+				data[0] += 1
+				data[dir_page_offset] = data[offset]
+			else:
+				self.add_ptr_to_index_dir(data[offset], ptrs+curr_hash)
+
+		if pageno != 0:
+			p.data = array("i", data).tostring()
+			p.set_dirty()
+			p.unpin()
+
+	def add_ptr_to_index_dir(self, bucket_id, total):
+		dir_page_number = total/(_INTS_PER_PAGE-1)+1
+		dir_page_offset = total%(_INTS_PER_PAGE-1)+1
+		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, dir_page_number))
+		data = array("i")
+		data.fromstring(p.data)
+		data[0] += 1
+		data[dir_page_offset] = bucket_id
+		p.data = data.tostring()
+		p.set_dirty()
+		p.unpin()
 
 	def compute_key_size(self, indexmetadata):
 			tablemetadata = mdp.MetaDataProvider.get_metadata(indexmetadata.tablename)
@@ -209,18 +268,18 @@ class HashIndexManager(object):
 
 	def get_bucket_id(self, hash):
 		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, 0))
-		data = array("I")
+		data = array("i")
 		data.fromstring(p.data)
 		global_depth = data[0]
 
 		ptr_number = hash & ((1 << global_depth)-1)
 		p.unpin()
 
-		ptr_page = ptr_number / _INTS_PER_PAGE + 1
+		ptr_page = ptr_number / (_INTS_PER_PAGE - 1) + 1
 		p = bm.BufferManager.find_page(page.PageId(self.index_directory_filename, ptr_page))
-		data = array("I")
+		data = array("i")
 		data.fromstring(p.data)
-		bucket_id = data[ptr_number % _INTS_PER_PAGE]
+		bucket_id = data[ptr_number % (_INTS_PER_PAGE-1) + 1]
 		p.unpin()
 
 		return bucket_id

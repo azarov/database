@@ -9,7 +9,7 @@ def make_format_string(attributes):
 		if attr.typename == Types.INT:
 			format.append("i")
 		elif attr.typename == Types.DOUBLE:
-			format.append("q")
+			format.append("d")
 		elif attr.typename == Types.VARCHAR:
 			format.append(str(VARCHAR_MAX_SIZE)+"s")
 		else:

@@ -16,13 +16,13 @@ def test():
 	stmt = sqlparser.parse_statement(str)
 	ee.execute(stmt)
 
-	str = 'create table users (   id    int ,   name  vARchar(100) )'
+	str = 'create table users (   id    int ,   name  vARchar(100), weight double )'
 	str = " ".join(str.split())
 	stmt = sqlparser.parse_statement(str)
 	ee.execute(stmt)
 
-	for x in xrange(0,2000):
-		str = 'Insert into users values({0}, "Vasya")'.format(random.randint(1, 10000000))
+	for x in xrange(0,20000):
+		str = 'Insert into users values({0}, "Vasya", {1})'.format(random.randint(1, 10000000), random.random()*100)
 		stmt = sqlparser.parse_statement(str)
 		ee.execute(stmt)
 
