@@ -134,7 +134,7 @@ class HeapFile(object):
 
 		return struct.pack(tablemetadata.format, *attributes)
 
-	def get_all_records(self, tablemetadata):
+	def get_all_records(self, tablemetadata, wherestatement = None):
 		pages_number = dsm.DiskSpaceManager.get_pages_number(tablemetadata.name)
 		records_per_page = tablemetadata.records_per_page
 
@@ -146,6 +146,18 @@ class HeapFile(object):
 				if i == 1:
 					record_begin = tablemetadata.record_size*recordno
 					record_end = record_begin+tablemetadata.record_size
+					
+					record = p.data[record_begin:record_end]
+					
+					if wherestatement != None:
+						pass
+					else:
+						yield record
+					
+					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
+					print tablemetadata.attributes
+					print record[0]
+					
 					yield p.data[record_begin:record_end]
 				recordno += 1
 			p.unpin()

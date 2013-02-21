@@ -42,6 +42,23 @@ class WhereStatement(object):
 
 	def __repr__(self):
 		return "WhereStatement: [colname: {0}, operation: {1}, value: {2}]".format(self.colname, self.operation, self.value)
+	
+	def checkCondition(val):
+		if self.operation == WhereOps.EQ:
+			return self.value == val
+		elif self.operation == WhereOps.NEQ:
+			return self.value != val
+		elif self.operation == WhereOps.LT:
+			return self.value < val
+		elif self.operation == WhereOps.GT:
+			return self.value > val
+		elif self.operation == WhereOps.LEQ:
+			return self.value <= val
+		elif self.operation == WhereOps.GEQ:
+			return self.value >= val
+		else:
+			# TODO: error checking
+			return False
 
 def enum(**enums):
 	return type('Enum', (), enums)
