@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import csv
-import sys
 
 class CsvPrinter(object):
 	def __init__(self, file, tablemetadata):

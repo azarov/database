@@ -7,6 +7,8 @@ import metadataprovider as mdp
 import PagesDirectory as pd
 import buffermanager as bm
 import heapfile as hf
+import hashindex
+import btreeindex
 import os
 
 def execute(statement):
@@ -18,6 +20,10 @@ def execute(statement):
 		execute_select(statement)
 	elif isinstance(statement, statements.DropStatement):
 		execute_drop(statement)
+	elif isinstance(statement, statements.CreateIndexStatement):
+		execute_create_index(statement)
+	else:
+		raise Exception("Unknown statement type: {0}", type(statement))
 
 
 def execute_create(statement):
@@ -56,3 +62,14 @@ def execute_drop(statement):
 
 	if os.path.isfile(mdp.get_metadata_name(statement.tablename)):
 		os.remove(mdp.get_metadata_name(statement.tablename))
+
+def execute_create_index(st):
+	indexmetadata = tmd.IndexMetaData(st.tablename, st.indexname, [tmd.KeyInfo(x.column_name, x.ascending) for x in st.columns], st.is_unique, st.is_btree)
+	mdp.MetaDataProvider.add_index_info(st.tablename, indexmetadata)
+
+	if indexmetadata.type == tmd.IndexTypes.HASH:
+		hashindex.create_index(st.tablename, indexmetadata)
+	elif indexmetadata.type == tmd.IndexTypes.BTREE:
+		btreeindex.create_index(st.tablename, indexmetadata)
+	else:
+		raise Exception("Can't create index. Unknown type of index: {0}".format(indexmetadata.type))

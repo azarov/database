@@ -29,3 +29,20 @@ class DropStatement(object):
 
 	def __repr__(self):
 		return "DropStatement: [tablename: {0}]".format(self.tablename)	
+
+class CreateIndexStatement(object):
+	def __init__(self, tablename, indexname, columns, is_unique = False, is_btree = False):
+		""" columns - list of IndexColumn """
+		self.tablename = tablename
+		self.indexname = indexname		
+		self.columns = columns
+		self.is_unique = is_unique
+		self.is_btree = is_btree
+
+	def __repr__(self):
+		return "CreateIndexStatement: [tablename: {0}]".format(self.tablename)		
+
+class IndexColumn(object):
+	def __init__(self, column_name, ascending):
+		self.column_name = column_name
+		self.ascending = ascending

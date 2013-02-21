@@ -20,7 +20,7 @@ def test():
 	stmt = sqlparser.parse_statement(str)
 	ee.execute(stmt)
 
-	for x in xrange(0,20000):
+	for x in xrange(0,20):
 		str = 'Insert into users values(1, "Vasya")'
 		stmt = sqlparser.parse_statement(str)
 		ee.execute(stmt)

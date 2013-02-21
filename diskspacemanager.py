@@ -29,9 +29,15 @@ class _DiskSpaceManager(object):
 		pageid = p.id
 		self.file = open(pageid.filename, "rb+")
 		self.file.seek(page.PAGESIZE*p.id.pageno)
-		self.file.write(p.data)
+		self.file.write(self._fit_data_to_page(p.data))
 		self.file.close()
 		p.reset_dirty()
+
+	def _fit_data_to_page(self, data):
+		if len(data) > page.PAGESIZE:
+			return data[:page.PAGESIZE]
+		else:
+			return data+"\x00"*(page.PAGESIZE-len(data))
 
 	def get_pages_number(self, filename):
 		p = self.get_page(page.PageId(filename, 0))

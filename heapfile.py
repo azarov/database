@@ -7,6 +7,12 @@ import diskspacemanager as dsm
 import buffermanager as bm
 import page
 
+class Record(object):
+	def __init__(self, pageno, rid, values):
+		self.pageno = pageno
+		self.rid = rid
+		self.values = values
+
 class HeapFile(object):
 	def __init__(self):
 		pass
@@ -24,8 +30,10 @@ class HeapFile(object):
 		except ValueError, e:
 			#this shouldn't happen
 			#should be logged
+			p.unpin()
 			raise e
 
+		#TODO: should be in try-catch block. Page should be unpinned if exception was occured
 		record = self._make_record(tablemetadata, values)
 		record_begin = tablemetadata.record_size*recordno
 		record_end = record_begin+tablemetadata.record_size
@@ -146,7 +154,8 @@ class HeapFile(object):
 				if i == 1:
 					record_begin = tablemetadata.record_size*recordno
 					record_end = record_begin+tablemetadata.record_size
-					yield p.data[record_begin:record_end]
+					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
+					yield Record(pageno, recordno, record)
 				recordno += 1
 			p.unpin()
 
