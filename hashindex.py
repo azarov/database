@@ -9,7 +9,7 @@ from array import array
 import heapfile as hf
 import struct
 
-_INIT_DEPTH = 5
+_INIT_DEPTH = 3
 _INTS_PER_PAGE = page.PAGESIZE/4
 
 def get_format_for_ints_array():
@@ -48,14 +48,14 @@ class HashIndexManager(object):
 
 		self._init_buckets_numbers()
 		# self._init_buckets(_INIT_DEPTH)
-		self._init_buckets(1<<_INIT_DEPTH,  2)
+		self._init_buckets(1<<_INIT_DEPTH, _INIT_DEPTH)
 
 		heap = hf.HeapFile()
 
 		for record in heap.get_all_records(tablemetadata):
 			key = self._make_key(record, tablemetadata)
 			iop = IndexOperationParams(key, record.pageno, record.rid)
-			self._insert_value(iop)
+			self.insert_value(iop)
 
 
 	def _get_global_depth(self):
@@ -134,7 +134,7 @@ class HashIndexManager(object):
 			d[-1],d[-2]=info[0],info[1]
 			return d.tostring()
 
-	def _insert_value(self, iop):
+	def insert_value(self, iop):
 		bucket_id = self.get_bucket_id(self._comute_hash(iop))
 
 		p = bm.BufferManager.find_page(page.PageId(self.index_filename, bucket_id))
@@ -195,7 +195,7 @@ class HashIndexManager(object):
 		dir_page.unpin()
 
 		for record in records:
-			self._insert_value(IndexOperationParams(list(record[2:]), record[0], record[1]))
+			self.insert_value(IndexOperationParams(list(record[2:]), record[0], record[1]))
 
 
 	def _double_buckets_count(self):
@@ -289,6 +289,55 @@ class HashIndexManager(object):
 		info = self._get_bucket_info(p.data)
 		occupied = info[1]
 		return occupied < (page.PAGESIZE-len(info)*2)/recordsize
+
+	def find_value(self, iop):
+		bucket_id = self.get_bucket_id(self._comute_hash(iop))
+
+		p = bm.BufferManager.find_page(page.PageId(self.index_filename, bucket_id))
+		info = self._get_bucket_info(p.data)
+		occupied = info[1]
+		if occupied == 0:
+			p.unpin()
+			return None
+
+		record_size = struct.calcsize(self.record_format)
+		data = p.data[:occupied*record_size]
+		records = [''.join(x) for x in zip(*[list(data[z::record_size]) for z in range(record_size)])]
+		records = [struct.unpack(self.record_format, x) for x in records]
+
+		rid = 0
+		for rec in records:
+			if list(rec[2:]) == iop.key:
+				iop.pageno = rec[0]
+				iop.recordno = rec[1]
+				break
+			rid += 1
+
+		p.unpin()
+		return None if rid == occupied else rid
+
+	def delete_value(self, key):
+		iop = IndexOperationParams(key, 0, 0)
+		rid = self.find_value(iop)
+		if rid == None:
+			raise Exception("Can't delete record with key {0}. Couldn't find it.".format(key))
+
+		bucket_id = self.get_bucket_id(self._comute_hash(iop))
+		p = bm.BufferManager.find_page(page.PageId(self.index_filename, bucket_id))
+
+		record_size = struct.calcsize(self.record_format)
+		info = self._get_bucket_info(p.data)
+		occupied = info[1]
+		record_begin = rid*record_size
+		record_end = record_begin + record_size
+		data = bytearray(p.data)
+		data[record_begin:record_end] = data[(occupied-1)*record_size:occupied*record_size]
+		if len(data) != page.PAGESIZE:
+			raise Exception("Deletion internal error. Key {0}. Size of page {1}".format(key, len(data)))
+
+		p.data = self._set_bucket_info(str(data), (info[0], occupied+1))
+		p.set_dirty()
+		p.unpin()
 
 
 class IndexOperationParams(object):
