@@ -157,15 +157,6 @@ class HeapFile(object):
 					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
 					yield Record(pageno, recordno, record)
 					
-					if wherestatement != None:
-						pass
-					else:
-						yield record
-					
-					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
-					print tablemetadata.attributes
-					print record[0]
-					
 				recordno += 1
 			p.unpin()
 
