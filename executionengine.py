@@ -16,7 +16,7 @@ import os
 import comparers
 
 def execute(statement):
-	if isinstance(statement, statements.CreateStatement):
+	if isinstance(statement, statements.CreateTableStatement):
 		execute_create(statement)
 	elif isinstance(statement, statements.InsertStatement):
 		execute_insert(statement)
