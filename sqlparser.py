@@ -129,4 +129,28 @@ def parse_createTable(sql):
         
         atr.append(_get_attribute_by_column(part))
     return statements.CreateTableStatement(tableName, atr)
-                 
+
+def parse_createIndex(sql):
+    #text = "CREATE unique INDEx myindex ON mytable col  USING BTREE"
+    parts = sql.split()
+    uniq = False
+    i = 2
+    if (str(parts[1])).lower() == "unique":
+        uniq = True
+        i = 3
+    if parts[i-1].upper() != "INDEX":
+        print "cant"
+        return
+    indexname = parts[i]
+    tablename = parts[i+2]
+    column = parts[i+3]
+    is_btree = parts[i + 5].upper() == "BTREE"
+    #return statements.CreateIndexStatement()
+    print tablename
+    print indexname
+    print column
+    print uniq
+    print is_btree
+    return statements.CreateIndexStatement(tablename, indexname, column, uniq, is_btree)
+
+
