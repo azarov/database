@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#import sqlparser
+import sqlparser
 
 class CreateTableStatement(object):
     def __init__(self, tablename, attributes):
