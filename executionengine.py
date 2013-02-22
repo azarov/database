@@ -13,6 +13,7 @@ import struct
 import csvprinter
 import sys
 import os
+import comparers
 
 def execute(statement):
 	if isinstance(statement, statements.CreateStatement):
@@ -71,8 +72,10 @@ def execute_create_index(st):
 	mdp.MetaDataProvider.add_index_info(st.tablename, indexmetadata)
 
 	if indexmetadata.type == tmd.IndexTypes.HASH:
-		hashindex.create_index(st.tablename, indexmetadata)
+		index = hashindex.HashIndexManager(indexmetadata)
+		index.create_index()
 	elif indexmetadata.type == tmd.IndexTypes.BTREE:
+		index = btreeindex.BTreeIndexManager(indexmetadata, comparers.DefaulComparer())
 		btreeindex.create_index(st.tablename, indexmetadata)
 	else:
 		raise Exception("Can't create index. Unknown type of index: {0}".format(indexmetadata.type))

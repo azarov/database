@@ -8,6 +8,7 @@ import page
 from array import array
 import heapfile as hf
 import struct
+from indexoperationparams import IndexOperationParams
 
 _INIT_DEPTH = 3
 _INTS_PER_PAGE = page.PAGESIZE/4
@@ -340,9 +341,3 @@ class HashIndexManager(object):
 		p.unpin()
 
 
-class IndexOperationParams(object):
-	def __init__(self, key, pageno, recordno):
-		self.key = key
-		self.pageno = pageno
-		self.recordno = recordno
-		

@@ -21,8 +21,8 @@ def test():
 	stmt = sqlparser.parse_statement(str)
 	ee.execute(stmt)
 
-	for x in xrange(0,20):
-		str = 'Insert into users values({0}, "Vasya", {1})'.format(random.randint(1, 5), random.random()*100)
+	for x in xrange(0,20000):
+		str = 'Insert into users values({0}, "Vasya", {1})'.format(x, random.random()*100)
 		stmt = sqlparser.parse_statement(str)
 		ee.execute(stmt)
 
