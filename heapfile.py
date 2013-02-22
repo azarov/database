@@ -151,6 +151,12 @@ class HeapFile(object):
 			p = bm.BufferManager.find_page(page.PageId(tablemetadata.name, pageno))
 			records_table = bytearray(p.data[-records_per_page:])
 			recordno = 0
+
+			if wherestatement != None:
+				colindex = self._find_col_index(tablemetadata, wherestatement.colname)
+				if colindex == -1:
+					raise sqlparser.ParseException("Incorrect column name ("+wherestatement.colname+") in where clause.")
+
 			for i in records_table:
 				if i == 1:
 					record_begin = tablemetadata.record_size*recordno
@@ -158,10 +164,7 @@ class HeapFile(object):
 					record = struct.unpack(tablemetadata.format, p.data[record_begin:record_end])
 
 					if wherestatement != None:
-						index = self._find_col_index(tablemetadata, wherestatement.colname)
-						if index == -1:
-							raise sqlparser.ParseException("Incorrect column name ("+wherestatement.colname+") in where clause.")
-						if wherestatement.checkCondition(record[index]):
+						if wherestatement.checkCondition(record[colindex]):
 							yield Record(pageno, recordno, record)
 					else:
 						yield Record(pageno, recordno, record)
