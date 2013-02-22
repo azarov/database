@@ -53,3 +53,5 @@ def launch():
 				print "UnknownStatement: ", e.msg
 
 		commands.append(command)
+
+launch()
